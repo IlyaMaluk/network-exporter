@@ -47,6 +47,12 @@ func main() {
 	}
 	defer kp.Close()
 
+	tp, err := link.Tracepoint("skb", "kfree_skb", objs.TcpRetransmitPrograms.HandleDrop, nil)
+	if err != nil {
+		log.Fatalf("failed to attach tracepoint: %v", err)
+	}
+	defer tp.Close()
+
 	rd, err := ringbuf.NewReader(objs.TcpRetransmitMaps.Events)
 	if err != nil {
 		log.Fatalf("opening ringbuf reader: %v", err)
@@ -60,6 +66,7 @@ func main() {
 	retransmitColl := collectors.NewRetransmitCollector()
 	conntrackCollector := collectors.NewConntrackCollector(fs)
 	udpCollector := collectors.NewUDPCollector(fs)
+	icmpCollector := collectors.NewICMPCollector(fs)
 
 	ebpfExporter := ebpf.NewRetransmitExporter(retransmitColl, 4, 2048)
 	ebpfExporter.Start(ctx)
@@ -71,6 +78,7 @@ func main() {
 		retransmitColl,
 		conntrackCollector,
 		udpCollector,
+		icmpCollector,
 	)
 
 	go func() {

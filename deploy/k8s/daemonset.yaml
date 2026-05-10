@@ -19,6 +19,10 @@ spec:
         - name: exporter
           image: network-exporter-ebpf:latest
           imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: tracefs
+              mountPath: /sys/kernel/tracing
+              readOnly: true
 
           ports:
             - containerPort: 8080
@@ -48,3 +52,9 @@ spec:
 
           securityContext:
             privileged: true
+
+      volumes:
+        - name: tracefs
+          hostPath:
+            path: /sys/kernel/tracing
+            type: Directory

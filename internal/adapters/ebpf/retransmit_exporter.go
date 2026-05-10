@@ -14,7 +14,8 @@ type RetransmitEvent struct {
 	Saddr [4]byte
 	Daddr [4]byte
 	Dport uint16
-	_     [2]byte
+	Type  uint16 // 1 = Retransmit, 2 = Drop
+	_     [4]byte
 	Ts    uint64
 }
 
@@ -70,7 +71,7 @@ func (e *Exporter) processEvent(raw []byte) {
 	dstIP := net.IP(event.Daddr[:]).String()
 	dport := binary.BigEndian.Uint16(binary.LittleEndian.AppendUint16(nil, event.Dport))
 
-	e.collector.Observe(srcIP, dstIP, dport)
+	e.collector.Observe(srcIP, dstIP, dport, event.Type)
 }
 
 func (e *Exporter) Publish(raw []byte) {
