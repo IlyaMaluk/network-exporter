@@ -23,6 +23,8 @@ help:
 	@echo ""
 	@echo "Available Commands:"
 	@echo "  make help           - Show this help message"
+	@echo "  make up             - Start Minikube cluster and sync time"
+	@echo "  make down           - Gracefully stop the Minikube cluster"
 	@echo "  make fix-time       - Sync time in Minikube to fix blank Prometheus charts"
 	@echo "  make test-loss-on   - Simulate 15% packet loss for eBPF testing"
 	@echo "  make test-loss-off  - Restore normal network"
@@ -33,14 +35,26 @@ help:
 	@echo "  make k8s-deploy     - Deploy all resources to Kubernetes"
 	@echo "  make k8s-clean      - Delete all resources from Kubernetes"
 	@echo "  make k8s-rollout    - Restart deployments to pull fresh images"
-	@echo "  make run-web        - Open the Web UI in your browser automatically"
+	@echo "  make show-metrics   - Fetch raw OpenMetrics data from the cluster"
+	@echo "  make run-web        - Forward Dashboard to http://localhost:3000"
 	@echo "  make run-cli        - Run the interactive TUI in the cluster"
 
 # ==============================================================================
 # Environment & Fixes
 # ==============================================================================
 
-.PHONY: fix-time test-loss-on test-loss-off
+.PHONY: up down fix-time test-loss-on test-loss-off show-metrics
+
+up:
+	@echo "Starting Minikube cluster..."
+	minikube start
+	@echo "Syncing hardware clock for Prometheus..."
+	minikube ssh "sudo hwclock -s || sudo date -s \"\$$(curl -sI https://google.com | grep -i ^date: | sed 's/^[Dd]ate: //g' | tr -d '\r')\""
+	@echo "Cluster is up! Use 'make run-web' to access the dashboard."
+
+down:
+	@echo "Gracefully stopping Minikube cluster..."
+	minikube stop
 
 fix-time:
 	minikube ssh "sudo hwclock -s || sudo date -s \"\$$(curl -sI https://google.com | grep -i ^date: | sed 's/^[Dd]ate: //g' | tr -d '\r')\""
@@ -50,6 +64,10 @@ test-loss-on:
 
 test-loss-off:
 	minikube ssh "sudo tc qdisc del dev eth0 root || true"
+
+show-metrics:
+	@echo "Fetching raw eBPF metrics from the cluster..."
+	kubectl run curl-metrics -i --rm --image=curlimages/curl --restart=Never -- -s http://network-exporter:8080/metrics
 
 # ==============================================================================
 # Docker Builds
@@ -93,8 +111,9 @@ k8s-rollout:
 .PHONY: run-web run-cli
 
 run-web:
-	@echo "Opening dashboard in web browser..."
-	minikube service dashboard
+	@echo "🌐 Dashboard is available at: http://localhost:3000"
+	@echo "Press Ctrl+C to stop the server."
+	kubectl port-forward svc/dashboard 3000:80
 
 run-cli:
 	kubectl run netmon-debug -it --rm --image=$(CLI_IMG) --restart=Never --env="PROMETHEUS_URL=http://prometheus:9090"

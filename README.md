@@ -1,58 +1,81 @@
-# Network Exporter with eBPF and React Dashboard
+# eBPF Network Metrics Exporter
 
-An advanced network metrics exporter combining Go, eBPF capabilities, Prometheus data aggregation, and a modern React-based frontend dashboard. Developed to support anomaly detection capabilities.
+High-performance eBPF-based network metrics exporter for Kubernetes in OpenMetrics format, paired with a real-time React dashboard. Developed for deep network observability and anomaly detection with near-zero overhead.
 
-## Architecture Overview
+## 🧠 Architecture Overview
 
-- **eBPF (Extended Berkeley Packet Filter)**: Safely inspects native TCP/IP stack operations directly in the kernel space to gather granular data (e.g., active opens, socket states, TCP retransmits) with low overhead.
-- **Go Exporter**: Userspace application parsing eBPF maps and exposing them via HTTP along with standard procfs network metrics.
-- **Prometheus**: Time-series database scraping and retaining the exported metrics.
-- **React Frontend**: A Vite-based dynamic dashboard querying Prometheus (`/api/v1/query_range`) and using `recharts` for rich visualizations.
+- **eBPF (Extended Berkeley Packet Filter):** Safely hooks into the Linux kernel (via `kprobes`) to monitor TCP/IP stack operations (e.g., `tcp_retransmit_skb`). Gathers granular data directly in kernel space.
+- **Go Exporter:** Userspace daemon that reads from BPF maps and `procfs`, formats the data according to the OpenMetrics standard, and exposes it via an HTTP `/metrics` endpoint.
+- **Prometheus:** Time-series database configured to scrape and retain the exported metrics.
+- **React Frontend:** A modern, dynamic Vite-based dashboard querying the Prometheus API (`/api/v1/query_range`) and using `recharts` for rich, localized visualizations.
 
-## Prerequisites
+## 🛠 Prerequisites
 
-- **Go** (1.20+)
-- **Clang/LLVM** (for eBPF compilation)
-- **Node.js & npm** (for frontend)
-- **Docker & Minikube** (for localized Kubernetes deployment)
+- **WSL2 / Ubuntu** (Recommended environment)
+- **Minikube & Docker** (For local Kubernetes cluster)
+- **Go 1.20+** & **Clang/LLVM** (For eBPF compilation)
+- **Make** (To use the Master Control Panel)
 
-## Usage
+## 🚀 Quick Start (Kubernetes / Minikube)
 
-This project includes a comprehensive `Makefile` to simplify the build process.
+This project uses a centralized `Makefile` to handle everything from cluster provisioning to chaos engineering.
 
-- `make generate`: Compiles the eBPF C code into Go bytecode using `bpf2go`.
-- `make build`: Generates bytecode and builds the local Go executable.
-- `make docker-build`: Builds both backend and frontend Docker images.
-- `make k8s-deploy`: Applies the Kubernetes manifests from the `deploy/kubernetes/` directory.
-- `make k8s-clean`: Removes Kubernetes resources.
-
-## Native Linux (Ubuntu) Execution
-
-To run the exporter natively without Docker:
-
-1. Generate the eBPF bytecode:
+1. **Start the cluster and sync time:**
    ```bash
-   make generate
+   make up
    ```
 
-2. Build the executable:
+2. **Point your Docker CLI to Minikube's registry:**
    ```bash
-   make build
+   eval $(minikube docker-env)
+   ```
+   *(Windows users in PowerShell: `minikube docker-env | Invoke-Expression`)*
+
+3. **Build all images & Deploy:**
+   ```bash
+   make build-all
+   make k8s-deploy
    ```
 
-3. Run the exporter. **CRITICAL**: The binary MUST be run with `sudo` or elevated `CAP_BPF` / `CAP_SYS_ADMIN` privileges because attaching eBPF kprobes requires root access.
+4. **Access the Dashboard:**
    ```bash
-   sudo ./bin/network-exporter
+   make run-web
    ```
 
-## Frontend Dashboard
+## 🎮 Master Control Panel (Makefile Targets)
 
-To start the React interface:
+Forget manual `kubectl` commands. Use the Makefile:
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+| Command | Description |
+|---|---|
+| `make up` / `make down` | Start or gracefully stop the Minikube cluster. |
+| `make build-all` | Builds the Go eBPF daemon, React frontend, and CLI images. |
+| `make k8s-rollout` | Restarts the deployments to immediately pull freshly built images. |
+| `make show-metrics` | Spawns a temporary pod to curl and print raw OpenMetrics data. |
+| `make fix-time` | Syncs Minikube's hardware clock (fixes empty Prometheus charts after waking from sleep). |
 
-Ensure Prometheus is running and scraping the exporter. The frontend will proxy requests directly to `http://localhost:9090`.
+## 🚦 Chaos Engineering (Live Testing)
+
+Want to see the eBPF probes in action? You can simulate network degradation directly from the Makefile.
+
+- **Inject 15% Packet Loss:**
+  ```bash
+  make test-loss-on
+  ```
+  *Watch the TCP Retransmits (eBPF) chart spike in real-time on the dashboard.*
+
+- **Restore Normal Network:**
+  ```bash
+  make test-loss-off
+  ```
+
+## 📂 Project Structure
+
+- `/bpf`: C code for eBPF probes and kernel headers.
+- `/cmd` & `/internal`: Go source code for the exporter and CLI.
+- `/frontend`: React/Vite dashboard application.
+- `/deploy/k8s`: Kubernetes manifests (DaemonSet, Deployment, Service, Prometheus config).
+- `/build`: Dockerfiles for various project components.
+
+---
+*Note: If running the exporter natively outside of Docker/K8s, the binary MUST be executed with `sudo` (or `CAP_BPF` / `CAP_SYS_ADMIN` capabilities) to attach eBPF kprobes.*
