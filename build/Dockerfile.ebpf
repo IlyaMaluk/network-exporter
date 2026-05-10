@@ -1,0 +1,18 @@
+FROM golang:1.26-bookworm
+
+RUN apt update && apt install -y \
+    clang \
+    llvm \
+    lld \
+    make \
+    git \
+    libelf-dev \
+    zlib1g-dev \
+    linux-libc-dev \
+    ca-certificates
+
+RUN go install github.com/cilium/ebpf/cmd/bpf2go@latest
+
+ENV PATH=$PATH:/go/bin
+
+WORKDIR /src

@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "Network Metrics Exporter",
+    "refreshing": "Refreshing...",
+    "language": "Language",
+    "interfaces": "Interfaces:",
+    "addInterface": "Add Interface",
+    "loading": "Loading..."
+  },
+  "metrics": {
+    "networkRx": "Receive Traffic (Rx)",
+    "networkTx": "Transmit Traffic (Tx)",
+    "totalRxSpeed": "Total Rx Speed",
+    "totalTxSpeed": "Total Tx Speed",
+    "activeSockets": "Active Sockets",
+    "tcpRetransmitsSummary": "TCP Retransmits",
+    "networkErrors": "Network Errors",
+    "tcpRetransmits": "TCP Retransmits (eBPF)",
+    "tcpIpStack": "TCP/IP Stack",
+    "activeOpens": "Active Opens/s",
+    "passiveOpens": "Passive Opens/s",
+    "retransSegs": "Retransmitted Segments/s",
+    "socketStates": "Socket States",
+    "established": "Established",
+    "timeWait": "Time Wait",
+    "listen": "Listen",
+    "closeWait": "Close Wait"
+  },
+  "descriptions": {
+    "networkRx": "Volume of incoming network data. Helps identify download spikes and inbound system load.",
+    "networkTx": "Volume of outgoing network data. Helps identify upload spikes and outbound system load.",
+    "networkErrors": "Hardware or link-level packet errors. Spikes indicate faulty interfaces, bad cables, or driver issues.",
+    "tcpIpStack": "Rate of new TCP connections. Active Opens = outbound (we connect to others). Passive Opens = inbound (others connect to us).",
+    "tcpRetransmits": "Deep eBPF kernel tracing of lost packets. High rates strongly indicate network congestion or packet drops.",
+    "socketStates": "Real-time usage of network sockets. Helps monitor connection limits and prevent resource exhaustion."
+  }
+}
