@@ -58,6 +58,8 @@ func main() {
 	tcpCollector := collectors.NewTCPCollector(fs)
 	socketCollector := collectors.NewSocketCollector(fs)
 	retransmitColl := collectors.NewRetransmitCollector()
+	conntrackCollector := collectors.NewConntrackCollector(fs)
+	udpCollector := collectors.NewUDPCollector(fs)
 
 	ebpfExporter := ebpf.NewRetransmitExporter(retransmitColl, 4, 2048)
 	ebpfExporter.Start(ctx)
@@ -67,6 +69,8 @@ func main() {
 		tcpCollector,
 		socketCollector,
 		retransmitColl,
+		conntrackCollector,
+		udpCollector,
 	)
 
 	go func() {

@@ -17,7 +17,7 @@ spec:
       hostPID: true
       containers:
         - name: exporter
-          image: network-exporter:latest
+          image: network-exporter-ebpf:latest
           imagePullPolicy: IfNotPresent
 
           ports:
