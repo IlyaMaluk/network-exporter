@@ -65,6 +65,12 @@ test-loss-on:
 test-loss-off:
 	minikube ssh "sudo tc qdisc del dev eth0 root || true"
 
+test-error-on:
+	minikube ssh "sudo iptables -A INPUT -i eth0 -m statistic --mode random --probability 0.1 -j DROP"
+
+test-error-off:
+	minikube ssh "sudo iptables -D INPUT -i eth0 -m statistic --mode random --probability 0.1 -j DROP || true"
+
 show-metrics:
 	@echo "Fetching raw eBPF metrics from the cluster..."
 	kubectl run curl-metrics -i --rm --image=curlimages/curl --restart=Never -- -s http://network-exporter:8080/metrics
