@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, Upload, Activity, AlertTriangle } from 'lucide-react';
 import { instantQuery } from '../lib/prometheus';
+import { useDashboard } from '../context/DashboardContext';
+import { InfoTooltip } from './InfoTooltip';
 
 interface KpiData {
   rxSpeed: number;
@@ -12,6 +14,7 @@ interface KpiData {
 
 export const SummaryCards = () => {
   const { t } = useTranslation();
+  const { refreshTick } = useDashboard();
   const [data, setData] = useState<KpiData>({
     rxSpeed: 0,
     txSpeed: 0,
@@ -19,38 +22,36 @@ export const SummaryCards = () => {
     tcpRetransmits: 0,
   });
 
-  useEffect(() => {
-    const fetchKpis = async () => {
-      try {
-        const [rxRes, txRes, socketsRes, tcpRes] = await Promise.all([
-          instantQuery('sum(rate(node_network_receive_bytes_total[1m]))'),
-          instantQuery('sum(rate(node_network_transmit_bytes_total[1m]))'),
-          instantQuery('node_tcp_sockets_inuse'),
-          instantQuery('sum(rate(node_tcp_retransmit_total[30s]))')
-        ]);
+  const fetchKpis = useCallback(async () => {
+    try {
+      const [rxRes, txRes, socketsRes, tcpRes] = await Promise.all([
+        instantQuery('sum(rate(node_network_receive_bytes_total[1m]))'),
+        instantQuery('sum(rate(node_network_transmit_bytes_total[1m]))'),
+        instantQuery('node_tcp_sockets_inuse'),
+        instantQuery('sum(rate(node_tcp_retransmit_total[2m]))')
+      ]);
 
-        const parseResult = (res: any[]) => {
-          if (res && res.length > 0 && res[0].value) {
-            return parseFloat(res[0].value[1]) || 0;
-          }
-          return 0;
-        };
+      const parseResult = (res: any[]) => {
+        if (res && res.length > 0 && res[0].value) {
+          return parseFloat(res[0].value[1]) || 0;
+        }
+        return 0;
+      };
 
-        setData({
-          rxSpeed: parseResult(rxRes),
-          txSpeed: parseResult(txRes),
-          activeSockets: parseResult(socketsRes),
-          tcpRetransmits: parseResult(tcpRes)
-        });
-      } catch (error) {
-        console.error('Failed to fetch KPIs', error);
-      }
-    };
-
-    fetchKpis();
-    const interval = setInterval(fetchKpis, 15000);
-    return () => clearInterval(interval);
+      setData({
+        rxSpeed: parseResult(rxRes),
+        txSpeed: parseResult(txRes),
+        activeSockets: parseResult(socketsRes),
+        tcpRetransmits: parseResult(tcpRes)
+      });
+    } catch (error) {
+      console.error('Failed to fetch KPIs', error);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchKpis();
+  }, [fetchKpis, refreshTick]);
 
   const formatSpeed = (bytesPerSec: number) => {
     if (bytesPerSec >= 1024 * 1024) {
@@ -66,7 +67,9 @@ export const SummaryCards = () => {
           <Download size={24} />
         </div>
         <div>
-          <p className="text-sm font-medium text-slate-400">{t('metrics.totalRxSpeed')}</p>
+          <p className="text-sm font-medium text-slate-400 flex items-center">
+            {t('metrics.totalRxSpeed')}
+          </p>
           <p className="text-2xl font-bold text-white">{formatSpeed(data.rxSpeed)}</p>
         </div>
       </div>
@@ -76,7 +79,9 @@ export const SummaryCards = () => {
           <Upload size={24} />
         </div>
         <div>
-          <p className="text-sm font-medium text-slate-400">{t('metrics.totalTxSpeed')}</p>
+          <p className="text-sm font-medium text-slate-400 flex items-center">
+            {t('metrics.totalTxSpeed')}
+          </p>
           <p className="text-2xl font-bold text-white">{formatSpeed(data.txSpeed)}</p>
         </div>
       </div>
@@ -86,7 +91,10 @@ export const SummaryCards = () => {
           <Activity size={24} />
         </div>
         <div>
-          <p className="text-sm font-medium text-slate-400">{t('metrics.activeSockets')}</p>
+          <p className="text-sm font-medium text-slate-400 flex items-center">
+            {t('metrics.activeSockets')}
+            <InfoTooltip text={t('descriptions.activeSockets')} />
+          </p>
           <p className="text-2xl font-bold text-white">{Math.round(data.activeSockets)}</p>
         </div>
       </div>
@@ -96,7 +104,10 @@ export const SummaryCards = () => {
           <AlertTriangle size={24} />
         </div>
         <div>
-          <p className="text-sm font-medium text-slate-400">{t('metrics.tcpRetransmitsSummary')}</p>
+          <p className="text-sm font-medium text-slate-400 flex items-center">
+            {t('metrics.tcpRetransmitsSummary')}
+            <InfoTooltip text={t('descriptions.tcpRetransmits')} />
+          </p>
           <p className="text-2xl font-bold text-white">{data.tcpRetransmits.toFixed(2)}</p>
         </div>
       </div>
