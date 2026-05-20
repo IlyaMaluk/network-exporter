@@ -114,12 +114,17 @@ k8s-rollout:
 # UI Runners
 # ==============================================================================
 
-.PHONY: run-web run-cli
+.PHONY: run-web run-grafana run-cli
 
 run-web:
 	@echo "🌐 Dashboard is available at: http://localhost:3000"
 	@echo "Press Ctrl+C to stop the server."
 	kubectl port-forward svc/dashboard 3000:80
+
+run-grafana:
+	@echo "🌐 Dashboard is available at: http://localhost:3001"
+	@echo "Press Ctrl+C to stop the server."
+	kubectl port-forward daemonset/network-exporter 8081:8080
 
 run-cli:
 	kubectl run netmon-debug -it --rm --image=$(CLI_IMG) --restart=Never --env="PROMETHEUS_URL=http://prometheus:9090"
