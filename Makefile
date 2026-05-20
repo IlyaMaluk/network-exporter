@@ -79,18 +79,18 @@ show-metrics:
 # Docker Builds
 # ==============================================================================
 
-.PHONY: build-ebpf build-web build-cli build-all
+.PHONY: build-ebpf build-web build-all
 
 build-ebpf:
 	docker build -t $(EBPF_IMG) -f build/Dockerfile.ebpf .
 
+build-frontend:
+	docker build --no-cache -t network-dashboard:latest -f frontend/Dockerfile ./frontend
+
 build-web:
 	docker build -t $(WEB_IMG) -f frontend/Dockerfile ./frontend
 
-build-cli:
-	docker build -t $(CLI_IMG) -f build/Dockerfile.cli .
-
-build-all: build-ebpf build-web build-cli
+build-all: build-ebpf build-web
 
 # ==============================================================================
 # Kubernetes Deploy & Rollouts
