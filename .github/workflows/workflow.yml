@@ -36,6 +36,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-          context: ./backend
+          context: .
+          file: ./build/Dockerfile
           push: true
           tags: user/ebpf-exporter:latest
