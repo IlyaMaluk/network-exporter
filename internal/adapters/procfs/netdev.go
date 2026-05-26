@@ -13,7 +13,7 @@ func (p *ProcFS) ReadNetDev() ([]models.NetDevStats, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	var result []models.NetDevStats
 	scanner := bufio.NewScanner(f)

@@ -13,7 +13,7 @@ func (p *ProcFS) ReadSockStat() (models.SockStat, error) {
 	if err != nil {
 		return models.SockStat{}, err
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	scanner := bufio.NewScanner(f)
 

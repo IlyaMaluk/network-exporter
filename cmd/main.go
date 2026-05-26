@@ -39,25 +39,25 @@ func main() {
 	if err := gen.LoadTcpRetransmitObjects(&objs, nil); err != nil {
 		log.Fatalf("loading objects: %v", err)
 	}
-	defer objs.Close()
+	defer objs.Close() //nolint:errcheck
 
-	kp, err := link.Kprobe("tcp_retransmit_skb", objs.TcpRetransmitPrograms.HandleRetransmit, nil)
+	kp, err := link.Kprobe("tcp_retransmit_skb", objs.HandleRetransmit, nil)
 	if err != nil {
 		log.Fatalf("failed to attach kprobe: %v", err)
 	}
-	defer kp.Close()
+	defer kp.Close() //nolint:errcheck
 
-	tp, err := link.Tracepoint("skb", "kfree_skb", objs.TcpRetransmitPrograms.HandleDrop, nil)
+	tp, err := link.Tracepoint("skb", "kfree_skb", objs.HandleDrop, nil)
 	if err != nil {
 		log.Fatalf("failed to attach tracepoint: %v", err)
 	}
-	defer tp.Close()
+	defer tp.Close() //nolint:errcheck
 
-	rd, err := ringbuf.NewReader(objs.TcpRetransmitMaps.Events)
+	rd, err := ringbuf.NewReader(objs.Events)
 	if err != nil {
 		log.Fatalf("opening ringbuf reader: %v", err)
 	}
-	defer rd.Close()
+	defer rd.Close() //nolint:errcheck
 
 	fs := procfs.New()
 	networkCollector := collectors.NewNetworkCollector(fs)
@@ -117,7 +117,9 @@ func main() {
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	server.Shutdown(shutdownCtx)
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Printf("HTTP server shutdown error: %v", err)
+	}
 
 	slog.Info("server shutdown successfully")
 }

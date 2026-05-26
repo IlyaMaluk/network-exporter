@@ -13,7 +13,7 @@ func (p *ProcFS) ReadICMPStats() (models.ICMPStats, error) {
 	if err != nil {
 		return models.ICMPStats{}, err
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	scanner := bufio.NewScanner(f)
 	var keys []string

@@ -43,9 +43,10 @@ func (c *RetransmitCollector) Collect(ch chan<- prometheus.Metric) {
 func (c *RetransmitCollector) Observe(src, dst string, dport uint16, eventType uint16) {
 	portStr := strconv.Itoa(int(dport))
 
-	if eventType == 1 {
+	switch eventType {
+	case 1:
 		c.retransmits.WithLabelValues(src, dst, portStr).Inc()
-	} else if eventType == 2 {
+	case 2:
 		c.drops.WithLabelValues(src, dst, portStr).Inc()
 	}
 }
