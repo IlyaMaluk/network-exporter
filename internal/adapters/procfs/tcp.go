@@ -13,7 +13,7 @@ func (p *ProcFS) ReadTCPStats() (models.TCPStats, error) {
 	if err != nil {
 		return models.TCPStats{}, err
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	scanner := bufio.NewScanner(f)
 

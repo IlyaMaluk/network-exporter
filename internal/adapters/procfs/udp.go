@@ -13,7 +13,7 @@ func (p *ProcFS) ReadUDPStats() (models.UDPStats, error) {
 	if err != nil {
 		return models.UDPStats{}, err
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	scanner := bufio.NewScanner(f)
 	var keys []string
