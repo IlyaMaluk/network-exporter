@@ -39,4 +39,4 @@ jobs:
           context: .
           file: ./build/Dockerfile
           push: true
-          tags: user/ebpf-exporter:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ebpf-exporter:latest
