@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: dashboard
-          image: network-dashboard:latest
-          imagePullPolicy: IfNotPresent
+          image: network-exporter-frontend:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 80
 ---

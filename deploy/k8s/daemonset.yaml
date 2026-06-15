@@ -18,7 +18,7 @@ spec:
       containers:
         - name: exporter
           image: network-exporter-ebpf:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           volumeMounts:
             - name: tracefs
               mountPath: /sys/kernel/tracing
